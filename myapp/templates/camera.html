@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Webcam</title>
+</head>
+<body>
+<video id="videoloop" width="320" height="240"></video>
+<canvas id="canvas" width="320" height="240"></canvas>
+<script>
+// Access the webcam
+var video = document.getElementById('videoloop');
+navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+video.srcObject = stream;
+video.play();
+});
+
+// Create a new XMLHttpRequest object
+var xhr = new XMLHttpRequest();
+
+// Set the request method and the URL
+xhr.open('POST', '/webcam/');
+
+// Set the content type
+xhr.setRequestHeader('Content-Type', 'image/jpeg');
+
+// Create a function to handle the response
+xhr.onload = function() {
+  // Get the response data
+  var data = xhr.response;
+
+  // Display the response data in the canvas
+  var ctx = document.getElementById('canvas').getContext('2d');
+  ctx.drawImage(data, 0, 0);
+};
+
+// Send the video frame to the Django view function
+var interval = setInterval(function() {
+  var image = video.captureFrame();
+  xhr.send(image);
+}, 1000);
+</script>
+</body>
+</html>

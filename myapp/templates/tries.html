@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Capture</title>
+</head>
+<body>
+    <div>
+        <video id="video" width="640" height="480" autoplay></video>
+    </div>
+    <div>
+        <button id="capture-btn">Capture</button>
+    </div>
+
+    <script>
+        // Get access to the user's camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                var videoElement = document.getElementById('video');
+                videoElement.srcObject = stream;
+            })
+            .catch(function (error) {
+                console.error('Error accessing camera:', error);
+            });
+
+        // Capture the video frames and send them to the Django view
+        var captureButton = document.getElementById('capture-btn');
+        captureButton.addEventListener('click', function () {
+            var videoElement = document.getElementById('video');
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            var width = videoElement.videoWidth;
+            var height = videoElement.videoHeight;
+
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(videoElement, 0, 0, width, height);
+
+            var videoData = canvas.toDataURL('video/webm');
+
+            // Send the captured video data to the Django view
+            fetch('/videoCam/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ videoData: videoData }),
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.log('Processed video data:', data.processedVideoData);
+                    // Display the processed video data on the page if needed
+                })
+                .catch(function (error) {
+                    console.error('Error processing video:', error);
+                });
+        });
+    </script>
+</body>
+</html>
